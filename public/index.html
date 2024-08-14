@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweet Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        h1 {
+            color: #1da1f2; /* Twitter blue */
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #chatbox {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+        #input {
+            width: calc(100% - 20px);
+            max-width: 600px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            display: block;
+            background-color: #fff;
+        }
+        p {
+            margin: 5px 0;
+        }
+        strong {
+            color: #1da1f2; /* Twitter blue */
+        }
+        .message-user {
+            text-align: right;
+            color: #000;
+        }
+        .message-bot {
+            text-align: left;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Tweet Chatbot</h1>
+        <div id="chatbox"></div>
+        <input type="text" id="input" placeholder="Ask something...">
+    </div>
+    <script>
+        document.getElementById('input').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const query = event.target.value;
+                event.target.value = '';
+                const chatbox = document.getElementById('chatbox');
+                
+                chatbox.innerHTML += `<p class="message-user"><strong>You:</strong> ${query}</p>`;
+                
+                fetch('/getTweets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    let tweetsHtml = '<p class="message-bot"><strong>Bot:</strong></p>';
+                    if (data.error) {
+                        tweetsHtml += `<p>${data.error}</p>`;
+                    } else {
+                        data.forEach(tweet => {
+                            tweetsHtml += `<p><strong>@${tweet.user}:</strong> ${tweet.text}</p>`;
+                        });
+                    }
+                    chatbox.innerHTML += tweetsHtml;
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                })
+                .catch(error => {
+                    chatbox.innerHTML += `<p class="message-bot"><strong>Bot:</strong> Error fetching tweets.</p>`;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
